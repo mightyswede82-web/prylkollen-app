@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import * as db from "../db";
 import { notifyOwner } from "./notification";
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY || "", {
+const stripe = new Stripe("STRIPE_KEY_REMOVED", {
   apiVersion: "2026-04-22.dahlia",
 });
 

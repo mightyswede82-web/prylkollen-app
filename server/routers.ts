@@ -9,7 +9,7 @@ import { invokeLLM } from "./_core/llm";
 import { storagePut } from "./storage";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY || "", {
+const stripe = new Stripe("STRIPE_KEY_REMOVED", {
   apiVersion: "2026-04-22.dahlia",
 });
 
