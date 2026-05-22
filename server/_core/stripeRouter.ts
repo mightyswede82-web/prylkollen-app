@@ -3,8 +3,15 @@ import { handleStripeWebhook } from "./stripeWebhook";
 
 export const stripeRouter = router({
   webhook: publicProcedure.mutation(async ({ ctx }) => {
-    const body = await ctx.req.text?.() || "";
-    const signature = ctx.req.headers?.["stripe-signature"] as string;
+    // Get raw body from request
+    let body = "";
+    if (ctx.req instanceof Request) {
+      body = await ctx.req.text();
+    } else {
+      // Express request
+      body = (ctx.req as any).rawBody || "";
+    }
+    const signature = (ctx.req as any).headers?.["stripe-signature"] as string;
 
     if (!signature) {
       throw new Error("Missing stripe-signature header");

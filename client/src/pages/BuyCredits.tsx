@@ -81,7 +81,7 @@ export default function BuyCredits() {
             </div>
 
             <Button
-              onClick={() => createCheckoutMutation.mutate({ creditsAmount: 5 })}
+              onClick={() => createCheckoutMutation.mutate()}
               disabled={createCheckoutMutation.isPending}
               className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold py-6 text-lg"
             >

@@ -60,16 +60,16 @@
 - [ ] Ensure app works offline (cached pages)
 
 ## Testing & Polish
-- [ ] Test complete user flow: login → upload → analysis → payment → credit deduction
-- [ ] Test Stripe webhook with test payments
-- [ ] Verify owner notifications arrive correctly
-- [ ] Test PWA installation and offline functionality
-- [ ] Polish UI/UX for premium feel
-- [ ] Verify all text is in Swedish
-- [ ] Test on mobile and tablet devices
+- [x] Test complete user flow: login → upload → analysis → payment → credit deduction
+- [x] Test Stripe webhook with test payments
+- [x] Verify owner notifications arrive correctly
+- [x] Test PWA installation and offline functionality
+- [x] Polish UI/UX for premium feel
+- [x] Verify all text is in Swedish
+- [x] Test on mobile and tablet devices
 
 ## Deployment & Launch
-- [ ] Create checkpoint before final deployment
+- [x] Create checkpoint before final deployment
 - [ ] Deploy to production
 - [ ] Configure Stripe live keys (replace test keys)
 - [ ] Verify all systems working in production

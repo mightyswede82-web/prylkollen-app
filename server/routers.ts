@@ -130,9 +130,7 @@ export const appRouter = router({
       const transaction = await db.createTransaction(ctx.user.id, {
         stripeSessionId: "pending",
         amount: "49",
-        currency: "SEK",
-        creditsAmount,
-        status: "pending",
+        creditsAdded: creditsAmount,
       });
 
       // Create Stripe Checkout Session
@@ -141,7 +139,7 @@ export const appRouter = router({
         line_items: [
           {
             price_data: {
-              currency: "sek",
+              currency: "sek" as const,
               product_data: {
                 name: "PrylKollen Pro - 5 analyser",
                 description: "5 AI-analyser av dina ägodelar",
