@@ -5,6 +5,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export default function Inventory() {
   const { user } = useAuth();
@@ -23,8 +24,13 @@ export default function Inventory() {
     },
   });
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate("/");
     return null;
   }
 

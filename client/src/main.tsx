@@ -8,6 +8,16 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
+// Global error handlers for debugging mobile issues
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    console.error('[Global Error]', e.error || e.message, e.filename, e.lineno);
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('[Unhandled Rejection]', e.reason);
+  });
+}
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {

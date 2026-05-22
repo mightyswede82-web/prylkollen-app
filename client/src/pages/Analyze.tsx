@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Loader2, Upload, Camera } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 
 export default function Analyze() {
@@ -29,8 +29,13 @@ export default function Analyze() {
     },
   });
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate("/");
     return null;
   }
 

@@ -5,6 +5,7 @@ import { Loader2, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export default function BuyCredits() {
   const { user } = useAuth();
@@ -21,8 +22,13 @@ export default function BuyCredits() {
     },
   });
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate("/");
     return null;
   }
 

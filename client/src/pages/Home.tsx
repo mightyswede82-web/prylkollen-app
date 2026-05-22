@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
 import { Camera, Lock, Zap, Shield } from "lucide-react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   if (isAuthenticated) {
-    return <Link href="/dashboard" />;
+    return null;
   }
 
   return (

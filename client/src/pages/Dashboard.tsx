@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Loader2, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { useEffect } from "react";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +20,12 @@ export default function Dashboard() {
     },
   });
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -28,7 +35,6 @@ export default function Dashboard() {
   }
 
   if (!user) {
-    navigate("/");
     return null;
   }
 
