@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, credits, items, transactions, type Credit, type Item, type Transaction } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,145 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ========== CREDITS ==========
+
+export async function getOrCreateCredits(userId: number): Promise<Credit> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await db.select().from(credits).where(eq(credits.userId, userId)).limit(1);
+  
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  await db.insert(credits).values({
+    userId,
+    balance: 5, // Start with 5 free credits
+  });
+
+  const result = await db.select().from(credits).where(eq(credits.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function getCredits(userId: number): Promise<Credit | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(credits).where(eq(credits.userId, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function addCredits(userId: number, amount: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getCredits(userId);
+  if (!existing) {
+    await db.insert(credits).values({
+      userId,
+      balance: amount,
+    });
+  } else {
+    await db.update(credits)
+      .set({ balance: existing.balance + amount })
+      .where(eq(credits.userId, userId));
+  }
+}
+
+export async function deductCredit(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getCredits(userId);
+  if (!existing || existing.balance <= 0) {
+    return false;
+  }
+
+  await db.update(credits)
+    .set({ balance: existing.balance - 1 })
+    .where(eq(credits.userId, userId));
+
+  return true;
+}
+
+// ========== ITEMS ==========
+
+export async function createItem(userId: number, data: {
+  name: string;
+  description?: string;
+  estimatedValue?: string;
+  imageUrl?: string;
+  imageKey?: string;
+}): Promise<Item> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(items).values({
+    userId,
+    ...data,
+  });
+
+  const itemId = result[0].insertId;
+  const created = await db.select().from(items).where(eq(items.id, itemId)).limit(1);
+  return created[0];
+}
+
+export async function getItems(userId: number): Promise<Item[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(items).where(eq(items.userId, userId));
+}
+
+export async function deleteItem(itemId: number, userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(items).where(
+    and(eq(items.id, itemId), eq(items.userId, userId))
+  );
+}
+
+// ========== TRANSACTIONS ==========
+
+export async function createTransaction(userId: number, data: {
+  stripeSessionId: string;
+  stripePaymentIntentId?: string;
+  amount: string;
+  creditsAdded: number;
+}): Promise<Transaction> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(transactions).values({
+    userId,
+    status: "pending",
+    currency: "SEK",
+    ...data,
+  });
+
+  const txId = result[0].insertId;
+  const created = await db.select().from(transactions).where(eq(transactions.id, txId)).limit(1);
+  return created[0];
+}
+
+export async function getTransaction(stripeSessionId: string): Promise<Transaction | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(transactions)
+    .where(eq(transactions.stripeSessionId, stripeSessionId))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateTransactionStatus(stripeSessionId: string, status: "pending" | "completed" | "failed"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(transactions)
+    .set({ status })
+    .where(eq(transactions.stripeSessionId, stripeSessionId));
+}
