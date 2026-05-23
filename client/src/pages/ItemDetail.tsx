@@ -120,6 +120,7 @@ export default function ItemDetail() {
               <p className="text-4xl font-bold">
                 {item.estimatedValue ? `${item.estimatedValue} kr` : "Ej värderat"}
               </p>
+              <p className="text-xs opacity-60 mt-2">⚠️ Detta är en AI-uppskattning och kan skilja sig från verkligt marknadsvärde.</p>
             </Card>
 
             {/* Condition */}
@@ -162,6 +163,9 @@ export default function ItemDetail() {
             </div>
             <p className="text-blue-800 leading-relaxed whitespace-pre-wrap">
               {(item as any).marketInsight}
+            </p>
+            <p className="text-xs text-blue-600 mt-4 italic">
+              Observera: Prisuppskattningar och marknadsinsikter är AI-genererade och kan vara felaktiga. Kontrollera alltid mot faktiska marknadsplatser.
             </p>
           </Card>
         )}
