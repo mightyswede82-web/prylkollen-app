@@ -67,11 +67,11 @@ export const appRouter = router({
             messages: [
               {
                 role: "system",
-                content: "Du är en expert på att identifiera och värdera föremål. Analysera bilden och ge namn, beskrivning och värderingsuppskattning i svenska kronor. Svara ENDAST i JSON-format med fälten: name (string), description (string), estimatedValue (number i SEK). Ingen annan text.",
+                content: "Du är en expert på att identifiera och värdera föremål. Analysera bilden och ge namn, beskrivning, kategori, skick och värderingsuppskattning i svenska kronor. Svara ENDAST i JSON-format med fälten: name (string), description (string), category (string - t.ex. Elektronik, Möbler, Konst, Smycken, Kläder, Sport, Verktyg, Övrigt), condition (string - t.ex. Nyskick, Mycket bra, Bra, Acceptabelt, Dåligt), estimatedValue (number i SEK), marketInsight (string - kort marknadsinformation om föremålet). Ingen annan text.",
               },
               {
                 role: "user",
-                content: `Analysera denna bild av en sak. Bild URL: ${imageUrl}. Ge namn, beskrivning och värdering i JSON-format.`,
+                content: `Analysera denna bild av en sak. Bild URL: ${imageUrl}. Ge namn, beskrivning, kategori, skick och värdering i JSON-format.`,
               },
             ],
             response_format: {
@@ -83,10 +83,13 @@ export const appRouter = router({
                   type: "object",
                   properties: {
                     name: { type: "string", description: "Namn på föremålet" },
-                    description: { type: "string", description: "Beskrivning av föremålet" },
+                    description: { type: "string", description: "Detaljerad beskrivning av föremålet" },
+                    category: { type: "string", description: "Kategori (Elektronik, Möbler, Konst, Smycken, Kläder, Sport, Verktyg, Övrigt)" },
+                    condition: { type: "string", description: "Skick (Nyskick, Mycket bra, Bra, Acceptabelt, Dåligt)" },
                     estimatedValue: { type: "number", description: "Värdering i SEK" },
+                    marketInsight: { type: "string", description: "Kort marknadsinformation och tips" },
                   },
-                  required: ["name", "description", "estimatedValue"],
+                  required: ["name", "description", "category", "condition", "estimatedValue", "marketInsight"],
                   additionalProperties: false,
                 },
               },
@@ -100,11 +103,14 @@ export const appRouter = router({
 
           const analysis = JSON.parse(analysisText);
 
-          // Create item in database
+          // Create item in database with extended fields
           const item = await db.createItem(ctx.user.id, {
             name: analysis.name,
             description: analysis.description,
             estimatedValue: analysis.estimatedValue.toString(),
+            category: analysis.category || "Övrigt",
+            condition: analysis.condition || "Bra",
+            marketInsight: analysis.marketInsight || "",
             imageUrl,
             imageKey,
           });
@@ -121,6 +127,16 @@ export const appRouter = router({
       return db.getItems(ctx.user.id);
     }),
 
+    getItem: protectedProcedure
+      .input(z.object({ itemId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const item = await db.getItem(ctx.user.id, input.itemId);
+        if (!item) {
+          throw new Error("Föremålet hittades inte");
+        }
+        return item;
+      }),
+
     deleteItem: protectedProcedure
       .input(z.object({ itemId: z.number() }))
       .mutation(async ({ ctx, input }) => {
@@ -131,19 +147,15 @@ export const appRouter = router({
   payments: router({
     createCheckout: protectedProcedure.mutation(async ({ ctx }) => {
       if (!stripe) {
-        throw new Error("Stripe is not configured. Please contact support.");
+        throw new Error("Stripe är inte konfigurerat. Kontakta support.");
       }
       const creditsAmount = 5;
-      const amountInCents = 4900; // 49 SEK in cents
+      const amountInCents = 4900; // 49 SEK in öre
 
-      // Create transaction record
-      const transaction = await db.createTransaction(ctx.user.id, {
-        stripeSessionId: "pending",
-        amount: "49",
-        creditsAdded: creditsAmount,
-      });
+      // Determine the frontend URL from the request origin
+      const origin = ctx.req.headers.origin || ctx.req.headers.referer?.replace(/\/[^/]*$/, '') || process.env.FRONTEND_URL || "https://prylkollen.manus.space";
 
-      // Create Stripe Checkout Session
+      // Create Stripe Checkout Session first to get the session ID
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -160,19 +172,20 @@ export const appRouter = router({
           },
         ],
         mode: "payment",
-        success_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/inventory?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/buy-credits`,
+        success_url: `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/buy-credits?payment=cancelled`,
         metadata: {
           userId: ctx.user.id.toString(),
           creditsAmount: creditsAmount.toString(),
-          transactionId: transaction.id?.toString() || "",
         },
       });
 
-      // Update transaction with session ID
-      if (session.id) {
-        await db.updateTransactionStatus(session.id, "pending");
-      }
+      // Create transaction record with the actual Stripe session ID
+      await db.createTransaction(ctx.user.id, {
+        stripeSessionId: session.id,
+        amount: "49",
+        creditsAdded: creditsAmount,
+      });
 
       return {
         url: session.url,

@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { handleStripeWebhook } from "./stripeWebhook";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -31,6 +32,25 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // IMPORTANT: Stripe webhook must be registered BEFORE express.json()
+  // because Stripe requires the raw (unparsed) request body for signature verification
+  app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+    const signature = req.headers["stripe-signature"] as string;
+    if (!signature) {
+      console.error("[Stripe Webhook] Missing stripe-signature header");
+      res.status(400).json({ error: "Missing stripe-signature header" });
+      return;
+    }
+    try {
+      await handleStripeWebhook(req.body.toString(), signature);
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error("[Stripe Webhook] Error:", error);
+      res.status(400).json({ error: "Webhook processing failed" });
+    }
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

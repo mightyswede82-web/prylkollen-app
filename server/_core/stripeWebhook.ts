@@ -50,10 +50,22 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
   }
 
   try {
-    // Get transaction record
+    // Get transaction record by Stripe session ID
     const transaction = await db.getTransaction(session.id);
     if (!transaction) {
-      console.error("[Stripe] Transaction not found for session:", session.id);
+      // If transaction not found, still add credits (payment was successful)
+      console.warn("[Stripe] Transaction not found for session:", session.id, "- adding credits anyway");
+      await db.addCredits(userId, creditsAmount);
+      // Create a transaction record for tracking
+      await db.createTransaction(userId, {
+        stripeSessionId: session.id,
+        amount: (session.amount_total ? session.amount_total / 100 : 49).toString(),
+        creditsAdded: creditsAmount,
+      });
+      await notifyOwner({
+        title: "🎉 Ny försäljning!",
+        content: `Användare ${userId} köpte ${creditsAmount} analyser. Krediter tillagda (transaktion skapad i efterhand).`,
+      });
       return;
     }
 
@@ -69,9 +81,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     // Update transaction status
     await db.updateTransactionStatus(session.id, "completed");
 
-    // Get user info for notification
-    const user = await db.getUserByOpenId("");
-    
     // Send owner notification
     await notifyOwner({
       title: "🎉 Ny försäljning!",

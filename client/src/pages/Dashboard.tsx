@@ -5,6 +5,7 @@ import { Loader2, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -25,6 +26,16 @@ export default function Dashboard() {
       navigate("/", { replace: true });
     }
   }, [user, authLoading, navigate]);
+
+  // Show success toast after payment redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      toast.success("Betalning genomförd! Dina krediter har lagts till.");
+      // Clean up URL
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, []);
 
   if (authLoading) {
     return (

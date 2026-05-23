@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Analyze from "./pages/Analyze";
 import Inventory from "./pages/Inventory";
 import BuyCredits from "./pages/BuyCredits";
+import ItemDetail from "./pages/ItemDetail";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +20,7 @@ function Router() {
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/analyze"} component={Analyze} />
       <Route path={"/inventory"} component={Inventory} />
+      <Route path={"/item/:id"} component={ItemDetail} />
       <Route path={"/buy-credits"} component={BuyCredits} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

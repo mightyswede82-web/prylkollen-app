@@ -157,6 +157,9 @@ export async function createItem(userId: number, data: {
   name: string;
   description?: string;
   estimatedValue?: string;
+  category?: string;
+  condition?: string;
+  marketInsight?: string;
   imageUrl?: string;
   imageKey?: string;
 }): Promise<Item> {
@@ -180,7 +183,18 @@ export async function getItems(userId: number): Promise<Item[]> {
   return db.select().from(items).where(eq(items.userId, userId));
 }
 
-export async function deleteItem(itemId: number, userId: number): Promise<void> {
+export async function getItem(userId: number, itemId: number): Promise<Item | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(items).where(
+    and(eq(items.id, itemId), eq(items.userId, userId))
+  ).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function deleteItem(userId: number, itemId: number): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 

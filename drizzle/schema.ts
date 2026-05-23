@@ -48,6 +48,9 @@ export const items = mysqlTable("items", {
   name: text("name").notNull(),
   description: text("description"),
   estimatedValue: decimal("estimatedValue", { precision: 10, scale: 2 }),
+  category: varchar("category", { length: 100 }),
+  condition: varchar("condition", { length: 50 }),
+  marketInsight: text("marketInsight"),
   imageUrl: text("imageUrl"),
   imageKey: text("imageKey"), // S3 storage key
   createdAt: timestamp("createdAt").defaultNow().notNull(),
