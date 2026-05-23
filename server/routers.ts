@@ -9,7 +9,11 @@ import { invokeLLM } from "./_core/llm";
 import { storagePut } from "./storage";
 import Stripe from "stripe";
 
-const stripe = new Stripe("STRIPE_KEY_REMOVED", {
+const stripeKey = process.env.STRIPE_SECRET_KEY || "";
+if (!stripeKey) {
+  console.error("[Stripe] STRIPE_SECRET_KEY is not configured!");
+}
+const stripe = new Stripe(stripeKey, {
   apiVersion: "2026-04-22.dahlia",
 });
 
