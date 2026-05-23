@@ -64,7 +64,7 @@ export default function Inventory() {
 
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Min inventarie</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">Mitt lager</h2>
             <p className="text-slate-600">Alla dina analyserade saker</p>
           </div>
           {items && items.length > 0 && (

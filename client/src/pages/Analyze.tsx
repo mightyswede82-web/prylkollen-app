@@ -115,8 +115,7 @@ export default function Analyze() {
             <div className="grid grid-cols-2 gap-4 mb-8">
               {/* Camera Upload */}
               <div
-                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 transition-colors"
-                onClick={() => cameraInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 transition-colors relative overflow-hidden"
               >
                 <Camera className="w-8 h-8 text-slate-600 mx-auto mb-2" />
                 <p className="font-semibold text-slate-900">Fotografera</p>
@@ -127,14 +126,13 @@ export default function Analyze() {
                   accept="image/*"
                   capture="environment"
                   onChange={handleFileSelect}
-                  className="hidden"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
               </div>
 
               {/* File Upload */}
               <div
-                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 transition-colors relative overflow-hidden"
               >
                 <Upload className="w-8 h-8 text-slate-600 mx-auto mb-2" />
                 <p className="font-semibold text-slate-900">Ladda upp</p>
@@ -144,7 +142,7 @@ export default function Analyze() {
                   type="file"
                   accept="image/*"
                   onChange={handleFileSelect}
-                  className="hidden"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
               </div>
             </div>

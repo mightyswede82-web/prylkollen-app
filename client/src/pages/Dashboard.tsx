@@ -129,7 +129,7 @@ export default function Dashboard() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900">Min inventarie</h3>
+                  <h3 className="font-semibold text-slate-900">Mitt lager</h3>
                   <p className="text-sm text-slate-600 mt-1">Se alla dina värderingar</p>
                 </div>
               </div>

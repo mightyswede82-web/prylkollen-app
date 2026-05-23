@@ -153,7 +153,7 @@ export const appRouter = router({
       const amountInCents = 4900; // 49 SEK in öre
 
       // Determine the frontend URL from the request origin
-      const origin = ctx.req.headers.origin || ctx.req.headers.referer?.replace(/\/[^/]*$/, '') || process.env.FRONTEND_URL || "https://prylkollen.manus.space";
+      const origin = ctx.req.headers.origin || ctx.req.headers.referer?.replace(/\/[^/]*$/, '') || process.env.FRONTEND_URL || "https://prylapp-r2bmtcjf.manus.space";
 
       // Create Stripe Checkout Session first to get the session ID
       const session = await stripe.checkout.sessions.create({
