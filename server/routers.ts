@@ -9,13 +9,16 @@ import { invokeLLM } from "./_core/llm";
 import { storagePut } from "./storage";
 import Stripe from "stripe";
 
-const stripeKey = process.env.STRIPE_SECRET_KEY || "";
-if (!stripeKey) {
-  console.error("[Stripe] STRIPE_SECRET_KEY is not configured!");
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+let stripe: Stripe | null = null;
+
+if (stripeKey) {
+  stripe = new Stripe(stripeKey, {
+    apiVersion: "2026-04-22.dahlia",
+  });
+} else {
+  console.warn("[Stripe] STRIPE_SECRET_KEY is not configured - payments will not work");
 }
-const stripe = new Stripe(stripeKey, {
-  apiVersion: "2026-04-22.dahlia",
-});
 
 export const appRouter = router({
   system: systemRouter,
@@ -127,6 +130,9 @@ export const appRouter = router({
 
   payments: router({
     createCheckout: protectedProcedure.mutation(async ({ ctx }) => {
+      if (!stripe) {
+        throw new Error("Stripe is not configured. Please contact support.");
+      }
       const creditsAmount = 5;
       const amountInCents = 4900; // 49 SEK in cents
 

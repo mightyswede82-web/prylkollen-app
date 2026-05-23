@@ -2,15 +2,23 @@ import Stripe from "stripe";
 import * as db from "../db";
 import { notifyOwner } from "./notification";
 
-const stripeKey = process.env.STRIPE_SECRET_KEY || "";
-if (!stripeKey) {
-  console.error("[Stripe] STRIPE_SECRET_KEY is not configured in webhook!");
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+let stripe: Stripe | null = null;
+
+if (stripeKey) {
+  stripe = new Stripe(stripeKey, {
+    apiVersion: "2026-04-22.dahlia",
+  });
+} else {
+  console.warn("[Stripe] STRIPE_SECRET_KEY is not configured in webhook");
 }
-const stripe = new Stripe(stripeKey, {
-  apiVersion: "2026-04-22.dahlia",
-});
 
 export async function handleStripeWebhook(body: string, signature: string): Promise<void> {
+  if (!stripe) {
+    console.error("[Stripe] Stripe not configured, cannot process webhook");
+    return;
+  }
+
   let event: Stripe.Event;
 
   try {
