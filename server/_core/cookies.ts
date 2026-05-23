@@ -44,8 +44,8 @@ export function getSessionCookieOptions(
   return {
     httpOnly: true,
     path: "/",
-    // Use 'lax' for better mobile compatibility, fall back to 'none' only if secure
-    sameSite: isSecure ? "none" : "lax",
+    // Use 'lax' for maximum mobile compatibility (works on Samsung tablets)
+    sameSite: "lax",
     secure: isSecure,
   };
 }
