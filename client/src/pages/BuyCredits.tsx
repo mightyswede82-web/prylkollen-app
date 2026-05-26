@@ -1,32 +1,41 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { useLocation } from "wouter";
-import { trpc } from "@/lib/trpc";
-import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function BuyCredits() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
-
-  const createCheckoutMutation = trpc.payments.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message || "Något gick fel");
-    },
-  });
+  const stripeContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
       navigate("/", { replace: true });
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    // Load Stripe Buy Button script
+    const existingScript = document.querySelector('script[src="https://js.stripe.com/v3/buy-button.js"]');
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.src = "https://js.stripe.com/v3/buy-button.js";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Insert the Stripe Buy Button element
+    if (stripeContainerRef.current && stripeContainerRef.current.children.length === 0) {
+      const buyButton = document.createElement("stripe-buy-button");
+      buyButton.setAttribute("buy-button-id", "buy_btn_1TagYC3eLtbwcaudWh8ZAkdn");
+      buyButton.setAttribute("publishable-key", "pk_live_51TaEc53eLtbwcaud2FDWk9JGcFz7SXFO1iEFyIdEwa0MkqrQrUX85xLjQciOhMXsHEXOO1uEvMRlfOMMWq4eU1R500P56GV8il");
+      stripeContainerRef.current.appendChild(buyButton);
+    }
+  }, [user]);
 
   if (!user) {
     return null;
@@ -54,8 +63,8 @@ export default function BuyCredits() {
           <p className="text-slate-600">Välj ett paket för att börja analysera</p>
         </div>
 
-        {/* Pricing Card */}
-        <Card className="p-8 border-2 border-slate-900 bg-slate-900 text-white">
+        {/* Features list */}
+        <Card className="p-8 border-2 border-slate-900 bg-slate-900 text-white mb-8">
           <div className="space-y-6">
             <div>
               <p className="text-sm font-semibold opacity-90">PAKET</p>
@@ -85,30 +94,20 @@ export default function BuyCredits() {
               <p className="text-3xl font-bold">49 kr</p>
               <p className="text-sm opacity-90 mt-1">Engångspris</p>
             </div>
-
-            <Button
-              onClick={() => createCheckoutMutation.mutate()}
-              disabled={createCheckoutMutation.isPending}
-              className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold py-6 text-lg"
-            >
-              {createCheckoutMutation.isPending ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Laddar...
-                </>
-              ) : (
-                "Köp nu"
-              )}
-            </Button>
-
-            <p className="text-xs opacity-75 text-center">
-              Säker betalning via Stripe. Du kan köpa fler paket när som helst.
-            </p>
           </div>
         </Card>
 
+        {/* Stripe Buy Button */}
+        <div className="flex justify-center mb-8" ref={stripeContainerRef}>
+          {/* Stripe Buy Button will be inserted here */}
+        </div>
+
+        <p className="text-xs text-slate-500 text-center mb-12">
+          Säker betalning via Stripe. Du kan köpa fler paket när som helst.
+        </p>
+
         {/* FAQ */}
-        <div className="mt-12 space-y-6">
+        <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900">Vanliga frågor</h3>
 
           <Card className="p-6 border border-slate-200 bg-white">
